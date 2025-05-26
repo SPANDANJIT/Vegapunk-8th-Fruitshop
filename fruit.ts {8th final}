@@ -1,0 +1,9 @@
+import { allDevilFruits } from "@/lib/data/fruits";
+
+export function getFruitStore() {
+  return allDevilFruits.map(fruit => ({
+    name: fruit.name,
+    price: fruit.price,
+    powers: fruit.powers.map(p => p.name).join(", ")
+  }));
+}

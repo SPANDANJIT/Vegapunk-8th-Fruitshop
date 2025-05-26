@@ -1,0 +1,42 @@
+import { DevilFruit } from "@/lib/db/schema";
+
+const fruits: DevilFruit[] = [
+  {
+    name: "Spin-Spin Fruit",
+    type: "paramecia",
+    rarity: "common",
+    price: 2000,
+    description: "Grants spinning-based attacks.",
+    powers: [
+      { name: "Tornado Kick", description: "Spins rapidly to unleash a powerful kick", type: "attack" },
+      { name: "Spin Punch", description: "A spinning punch that deals moderate damage", type: "attack" },
+      { name: "Whirlwind Dash", description: "Dashes forward with spin momentum", type: "support" }
+    ],
+  },
+  {
+    name: "Chop-Chop Fruit",
+    type: "paramecia",
+    rarity: "common",
+    price: 3000,
+    description: "User can split their body into parts.",
+    powers: [
+      { name: "Body Split", description: "Avoids physical attacks by separating limbs", type: "defense" },
+      { name: "Slice Dodge", description: "Instantly dodges the next attack", type: "defense" },
+      { name: "Floating Head", description: "Detached head scouts ahead", type: "support" }
+    ],
+  },
+  {
+    name: "Mythical Zoan: Kirin",
+    type: "mythical_zoan",
+    rarity: "mythical",
+    price: 80000,
+    description: "Transforms user into the mythical Kirin beast.",
+    powers: [
+      { name: "Divine Charge", description: "Charges forward with mystical force", type: "attack" },
+      { name: "Lightning Mane", description: "Emits a blinding lightning shield", type: "defense" },
+      { name: "Healing Horn", description: "Heals allies by channeling mythical energy", type: "support" }
+    ],
+  }
+];
+
+export const allDevilFruits = fruits;
