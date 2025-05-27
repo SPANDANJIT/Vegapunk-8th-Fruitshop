@@ -1,0 +1,93 @@
+
+import { CommandInteraction, SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType } from 'discord.js';
+import { fruits } from '../../data/fruits';
+import { getUser, updateUser } from '../../lib/logic/user';
+
+module.exports = {
+  data: new SlashCommandBuilder()
+    .setName('store')
+    .setDescription('Browse or buy Devil Fruits')
+    .addSubcommand(sub =>
+      sub.setName('browse')
+        .setDescription('View available Devil Fruits')
+    )
+    .addSubcommand(sub =>
+      sub.setName('buy')
+        .setDescription('Buy a Devil Fruit')
+        .addStringOption(option =>
+          option.setName('fruit')
+            .setDescription('Name of the fruit')
+            .setRequired(true)
+        )
+    ),
+
+  async execute(interaction: CommandInteraction) {
+    const subcommand = interaction.options.getSubcommand();
+
+    if (subcommand === 'browse') {
+      const fruitList = fruits.map(f => `**${f.name}** - ${f.price.toLocaleString()} ᵇ
+*${f.damage} DMG • ${f.type}*`);
+      const pages = [];
+      const perPage = 5;
+
+      for (let i = 0; i < fruitList.length; i += perPage) {
+        const embed = new EmbedBuilder()
+          .setTitle('Devil Fruit Store')
+          .setDescription(fruitList.slice(i, i + perPage).join('\n\n'))
+          .setFooter({ text: `Page ${Math.floor(i / perPage) + 1} of ${Math.ceil(fruitList.length / perPage)}` });
+        pages.push(embed);
+      }
+
+      let currentPage = 0;
+      const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
+        new ButtonBuilder().setCustomId('prev').setLabel('⬅️ Prev').setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder().setCustomId('next').setLabel('Next ➡️').setStyle(ButtonStyle.Secondary)
+      );
+
+      const msg = await interaction.reply({
+        embeds: [pages[currentPage]],
+        components: [row],
+        fetchReply: true
+      });
+
+      const collector = msg.createMessageComponentCollector({
+        componentType: ComponentType.Button,
+        time: 60000
+      });
+
+      collector.on('collect', i => {
+        if (i.customId === 'next') currentPage = (currentPage + 1) % pages.length;
+        if (i.customId === 'prev') currentPage = (currentPage - 1 + pages.length) % pages.length;
+        i.update({ embeds: [pages[currentPage]] });
+      });
+
+      collector.on('end', () => {
+        msg.edit({ components: [] });
+      });
+    }
+
+    if (subcommand === 'buy') {
+      const fruitName = interaction.options.getString('fruit');
+      const fruit = fruits.find(f => f.name.toLowerCase() === fruitName?.toLowerCase());
+
+      if (!fruit) {
+        return interaction.reply({ content: 'That fruit does not exist in the store.', ephemeral: true });
+      }
+
+      const user = getUser(interaction.user.id);
+      if (user.bounty < fruit.price) {
+        return interaction.reply({ content: `Not enough bounty. Price: ${fruit.price} ᵇ`, ephemeral: true });
+      }
+
+      if (user.inventory.includes(fruit.name)) {
+        return interaction.reply({ content: 'You already own this Devil Fruit.', ephemeral: true });
+      }
+
+      user.bounty -= fruit.price;
+      user.inventory.push(fruit.name);
+      updateUser(interaction.user.id, user);
+
+      return interaction.reply(`You bought **${fruit.name}** for **${fruit.price.toLocaleString()} ᵇ**!`);
+    }
+  }
+};
